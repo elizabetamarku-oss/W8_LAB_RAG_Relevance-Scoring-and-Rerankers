@@ -2,7 +2,7 @@
 
 This repository contains a notebook-based lab for comparing chunking strategies in a RAG workflow. It uses two content sources:
 
-- A short podcast-style transcript about trustworthy AI
+- A short podcast-style transcript about trustworthy AI stored in `Document/`
 - A PDF document on trustworthy AI stored in `Document/`
 
 The notebook compares four approaches:
