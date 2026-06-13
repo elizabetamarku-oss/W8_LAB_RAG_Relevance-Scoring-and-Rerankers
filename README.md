@@ -1,118 +1,117 @@
-# RAG Chunking Strategies Lab
+# LAB | Relevance Scoring and Rerankers
 
-This repository contains a notebook-based lab for comparing chunking strategies in a RAG workflow. It uses two content sources:
+This repository contains a notebook-based lab for improving RAG retrieval with:
 
-- A short podcast-style transcript about trustworthy AI stored in `Document/`
-- A PDF document on trustworthy AI stored in `Document/`
+- Metadata filtering
+- Baseline embedding retrieval
+- LLM-based relevance scoring
+- Cohere reranking
 
-The notebook compares four approaches:
+The lab uses two bundled sources in `Document/`:
 
-- Fixed-size chunking
-- Recursive character chunking
-- Token-based chunking
-- Semantic chunking, as an advanced optional step
+- A PDF on trustworthy AI
+- A podcast-style audio file about trustworthy AI
 
 ## Repository Layout
 
-- `Notebook/chunking_strategies.ipynb` - main lab notebook
-- `Document/` - bundled source files used by the notebook
-- `summary.md` - short written conclusion for the lab
+- `Notebook/relevance_scoring_rerankers.ipynb` - main lab notebook
+- `Document/` - bundled PDF and audio sources used by the notebook
+- `lab_summary.md` - short written conclusion for the lab
 - `README.md` - this guide
 
-## What the Notebook Does
+## What The Notebook Does
 
-The notebook walks through the full chunking workflow:
+The notebook walks through an end-to-end relevance-ranking workflow:
 
 1. Installs the required packages
-2. Loads the transcript and PDF sources
-3. Defines helper utilities for token counting and chunk statistics
-4. Runs fixed-size, recursive, and token-based chunking
-5. Optionally runs semantic chunking if `sentence-transformers` is available
-6. Produces charts, summary tables, boundary analysis, and recommendations
+2. Loads API keys and initializes OpenAI and Cohere clients
+3. Loads the PDF and transcribes the podcast with Whisper
+4. Chunks both sources and attaches rich metadata
+5. Builds embeddings and runs baseline similarity search
+6. Applies optional LLM scoring and Cohere reranking
+7. Filters results by metadata such as `source_type`
+8. Runs a full RAG pipeline and compares retrieval quality
 
-The notebook also saves visual outputs such as:
-
-- `chunk_counts.png`
-- `token_distributions.png`
-- other plots created during the analysis
+The notebook also prints sample answers and score comparisons so you can manually judge whether reranking improves relevance.
 
 ## Requirements
 
 - Python 3.9 or newer
 - Jupyter Notebook or JupyterLab
-- Internet access for the first run only if the local PDF is missing
+- API access for OpenAI
+- Optional: Cohere API key for the reranking step
 
 The notebook uses these packages:
 
-- `langchain`
-- `langchain-text-splitters`
+- `openai`
+- `numpy`
 - `pypdf2`
 - `tiktoken`
-- `numpy`
-- `pandas`
-- `matplotlib`
-
-Optional:
-
-- `sentence-transformers` for semantic chunking
+- `python-dotenv`
+- `cohere`
+- `sentence-transformers`
+- `pydub`
+- `imageio[ffmpeg]`
+- `openai-whisper`
 
 ## Setup
 
 Install the core dependencies:
 
 ```bash
-pip install langchain langchain-text-splitters pypdf2 tiktoken numpy pandas matplotlib
+pip install openai numpy pypdf2 tiktoken python-dotenv pydub imageio[ffmpeg] openai-whisper
 ```
 
-If you want to use the semantic chunking section, also install:
+If you want to use the Cohere reranker and semantic tooling, also install:
 
 ```bash
-pip install sentence-transformers
+pip install cohere sentence-transformers
 ```
 
-## Run the Lab
+## Configure API Keys
 
-1. Open `Notebook/chunking_strategies.ipynb`
-2. Run the setup cell
-3. Run the notebook from top to bottom
+Set your keys in a `.env` file or in your environment:
 
-The PDF-loading cell prefers the bundled file in `Document/` first, so the notebook should start quickly even without re-downloading the source.
+```bash
+OPENAI_API_KEY=your_key_here
+COHERE_API_KEY=your_key_here
+```
+
+The Cohere key is optional, but the notebook expects OpenAI access for embeddings, scoring, and Whisper transcription.
+
+## Run The Lab
+
+1. Open `Notebook/relevance_scoring_rerankers.ipynb`
+2. Run the dependency installation cell
+3. Load the API keys and initialize the clients
+4. Run the notebook from top to bottom
+
+The notebook first tries to use the bundled files in `Document/`, so it can run without downloading new source content.
 
 ## Notes
 
-- The podcast transcript is a built-in sample string, so no extra file is needed for that part.
-- If the local PDF is not available, the notebook caches a downloaded copy in `.cache/`.
-- Semantic chunking is intentionally optional because it is slower and adds an extra dependency.
+- The PDF and audio file are both part of the repo, which keeps the lab self-contained.
+- Whisper transcription may take a little time on the first run.
+- Cohere reranking is optional; the notebook still works with baseline retrieval and LLM scoring if the Cohere key is missing.
+- Metadata filtering is useful when you want to query only the PDF or only the podcast transcript.
 
 ## Output
 
 When you run the notebook, you get:
 
-- Chunk previews for each strategy
-- Chunk-count comparisons
-- Token distribution plots
-- Broken-sentence analysis
-- Final strategy recommendations
+- Sample retrieval answers for each strategy
+- Baseline, LLM, and Cohere score comparisons
+- Metadata-filtered retrieval examples
+- A full RAG pipeline that can switch rerankers with one argument
+- A final manual evaluation prompt for comparing result quality
 
 ## Recommendation
 
-The notebook's final recommendation is:
+The lab's recommendation is to choose the retrieval strategy by source type:
 
-- For PDF documents, use **Recursive Character Chunking** with `chunk_size=1000` and `chunk_overlap=200`
-- For podcast transcripts, use **Token-Based Chunking** with `chunk_size=500` and `chunk_overlap=50`
+- For the PDF, use recursive chunking with rich metadata and baseline or reranked retrieval
+- For the podcast transcript, use the same metadata-aware pipeline, then compare baseline retrieval against LLM or Cohere reranking
+- Use Cohere reranking when you want the strongest relevance ordering and can afford the extra API call
+- Use baseline retrieval when you want the simplest and fastest option
 
-Why:
-
-- PDFs usually have headings, paragraphs, and section structure that recursive splitting preserves well
-- Transcripts usually need token-aware splitting because they are less structured and often feed directly into LLM workflows
-- Fixed-size chunking is fast, but it breaks context more often
-- Semantic chunking can produce strong results, but it is slower and is best kept as an advanced option
-
-## Recommended Use
-
-Use this lab if you want to understand how chunk size and chunking strategy affect:
-
-- Sentence preservation
-- Chunk consistency
-- Retrieval readiness for RAG
-- Trade-offs between quality and speed
+Overall, the lab shows that metadata filtering plus reranking is more flexible than plain similarity search, especially when the same query needs to behave differently across PDF and audio-derived text.
